@@ -1,0 +1,24 @@
+{
+  "chain": [
+    {
+      "indice": 0,
+      "hash_anterior": "0000000000000000000000000000000000000000000000000000000000000000",
+      "transacciones": [
+        {
+          "tipo": "coinbase",
+          "recompensa": 500,
+          "fees": 0,
+          "destino": "RGD:1A77LFiAzzVnDdpMRjKqwB3ZjiVnuNqQjk",
+          "timestamp": 1760476400.2370994
+        }
+      ],
+      "tiempo": 1760476400.2371097,
+      "nonce": 57798
+    }
+  ],
+  "nodes": [
+    "rudagnetwork2.canariannode.uk",
+    "rudagnetwork.canariannode.uk"
+  ],
+  "transacciones_pendientes": []
+}

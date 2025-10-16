@@ -1,0 +1,20 @@
+{
+    "blockchain_name": "Rudag Network",
+    "ticker": "RGD",
+    "symbol": "⚡",
+    "version": "1.0.0",
+    "max_supply": 21000000,
+    "initial_reward": 50,
+    "genesis_reward": 500,
+    "halving_interval": 210000,
+    "block_time": 60,
+    "initial_difficulty": "0000",
+    "transaction_fee": 0.001,
+    "max_transactions_per_block": 1000,
+    "address_version_byte": "0x00",
+    "blockchain_file": "blockchain.json",
+    "wallet_dir": "wallets",
+    "genesis_address": "RGD:1A77LFiAzzVnDdpMRjKqwB3ZjiVnuNqQjk",
+    "automatic_peer_discovery": true,
+    "share_peers_interval": 300
+}
