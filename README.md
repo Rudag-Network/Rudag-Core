@@ -73,7 +73,7 @@ Sigue estos pasos para poner en marcha tu propio nodo de Rudag Core.
 
 4.  **Haz los scripts ejecutables (en Linux/macOS):**
     ```bash
-    chmod +x addnode.sh RudagCoreV2.py
+    chmod +x addnode.sh Rudag-cli.py
     ```
 
 ### 3. Uso
@@ -89,7 +89,7 @@ Para operar el nodo, necesitarás dos terminales.
 2.  **Terminal 2: Lanza la CLI Interactiva**
     Usa esta terminal para interactuar con tu nodo.
     ```bash
-    python3 RudagCoreV2.py
+    python3 Rudag-cli.py
     ```
     Aparecerá un menú desde el cual podrás gestionar el nodo, las wallets, minar bloques y mucho más.
 
@@ -123,6 +123,69 @@ Aquí tienes un ejemplo para `ufw` (Uncomplicated Firewall) en sistemas basados 
     Deberías ver que el puerto 5000 está permitido.
 
 **Nota:** Si usas un sistema operativo diferente o un firewall distinto, consulta su documentación para abrir los puertos correspondientes.
+
+## 💻 Comandos
+
+Todos los comandos se gestionan a través de la CLI interactiva. A continuación se muestra una lista de las opciones disponibles:
+
+```
+=================================
+||      LISTA DE COMANDOS      ||
+=================================
+
+--- MENÚ PRINCIPAL ---
+1) Gestión del Nodo
+2) Operaciones con Wallets
+3) Transacciones
+4) Minería
+5) Información de la Red
+6) Gestión de la Blockchain
+7) Scripts Utilitarios
+8) Salir
+
+--- 1. GESTIÓN DEL NODO ---
+1) Iniciar Nodo
+2) Detener Nodo
+3) Ver información de red
+4) Añadir nodo a la red
+5) Sincronizar blockchain
+6) Descubrir nuevos peers
+7) Volver al menú principal
+
+--- 2. OPERACIONES CON WALLETS ---
+1) Listar wallets
+2) Crear nueva wallet
+3) Generar nueva dirección RGD
+4) Configurar wallet de minado
+5) Exportar wallet
+6) Importar wallet
+7) Backup de todas las wallets
+8) Volver al menú principal
+
+--- 3. TRANSACCIONES ---
+1) Crear nueva transacción
+2) Ver cadena completa
+3) Volver al menú principal
+
+--- 4. MINERÍA ---
+1) Minar bloque (Bucle Infinito)
+2) Minar bloque único
+3) Volver al menú principal
+
+--- 5. INFORMACIÓN DE LA RED ---
+- Muestra la información de la red.
+
+--- 6. GESTIÓN DE LA BLOCKCHAIN ---
+1) Reiniciar blockchain (PELIGRO)
+2) Ver información de red
+3) Ver cadena completa
+4) Volver al menú principal
+
+--- 7. SCRIPTS UTILITARIOS ---
+1) Ejecutar transaction.sh
+2) Ejecutar addnodes.sh
+3) Volver al menú principal
+```
 
 ## 🤝 Contribuciones
 

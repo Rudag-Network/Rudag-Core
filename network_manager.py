@@ -45,15 +45,29 @@ class NetworkManager:
     def _sync_worker(self):
         """Trabajador para sincronización periódica"""
         sync_interval = 30  # sincronizar cada 30 segundos
+        peer_discovery_interval = 300  # descubrir nuevos peers cada 5 minutos
         last_sync = 0
+        last_peer_discovery = 0
         
         while self.running:
             try:
                 current_time = time.time()
+                
+                # Sincronización regular de blockchain
                 if current_time - last_sync > sync_interval:
                     if self.blockchain.nodes:
                         self.sync_blockchain()
                     last_sync = current_time
+                
+                # Descubrimiento periódico de nuevos peers
+                if current_time - last_peer_discovery > peer_discovery_interval:
+                    print("🔄 Descubrimiento periódico de peers...")
+                    try:
+                        self.blockchain.discover_peers_from_server("http://rudagserver.canariannode.uk")
+                    except Exception as e:
+                        print(f"❌ Error en descubrimiento periódico: {e}")
+                    last_peer_discovery = current_time
+                    
                 time.sleep(5)
             except Exception as e:
                 print(f"❌ Error en sync worker: {e}")

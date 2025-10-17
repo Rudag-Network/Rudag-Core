@@ -397,3 +397,69 @@ class Blockchain:
                 if tx.get('tipo') == 'coinbase':
                     total += tx.get('recompensa', 0)
         return total
+
+    def discover_peers_from_server(self, server_url="https://rudagserver.canariannode.uk"):
+        """Descubrir peers desde el servidor central via Cloudflare"""
+        try:
+            print(f"🔍 Conectando al servidor de nodos: {server_url}")
+            
+            # Registrar este nodo en el servidor
+            node_address = self.get_node_address()
+            registration_data = {
+                "node_address": node_address,
+                "node_id": self.node_id,
+                "timestamp": time.time()
+            }
+            
+            # Registrar nodo
+            try:
+                response = requests.post(
+                    f"{server_url}/register",
+                    json=registration_data,
+                    timeout=15
+                )
+                if response.status_code == 200:
+                    reg_data = response.json()
+                    print(f"✅ Nodo registrado en servidor. Total: {reg_data['total_nodes']} nodos")
+            except Exception as e:
+                print(f"⚠️  No se pudo registrar nodo: {e}")
+            
+            # Obtener lista de nodos actualizada
+            print("📡 Obteniendo lista de nodos activos...")
+            response = requests.get(f"{server_url}/nodes", timeout=15)
+            
+            if response.status_code == 200:
+                nodes_data = response.json()
+                discovered_nodes = nodes_data["nodes"]
+                
+                print(f"📋 Servidor reporta {len(discovered_nodes)} nodos conocidos")
+                
+                added_count = 0
+                for node in discovered_nodes:
+                    if node not in self.nodes and node != node_address:  # No añadirse a sí mismo
+                        self.add_node(node)
+                        added_count += 1
+                
+                print(f"✅ {added_count} nuevos peers añadidos a la red local")
+                self.save_blockchain()
+                return True
+                
+        except requests.exceptions.ConnectionError:
+            print("❌ No se puede conectar al servidor de nodos")
+        except requests.exceptions.Timeout:
+            print("❌ Timeout conectando al servidor de nodos")
+        except Exception as e:
+            print(f"❌ Error descubriendo peers: {e}")
+        
+        return False
+
+    def get_node_address(self):
+        """Obtener la dirección pública de este nodo"""
+        try:
+            # Primero intentar obtener IP pública
+            response = requests.get('https://api.ipify.org', timeout=5)
+            public_ip = response.text.strip()
+            return f"{public_ip}:5000"
+        except:
+            # Fallback: usar localhost (para desarrollo)
+            return "localhost:5000"

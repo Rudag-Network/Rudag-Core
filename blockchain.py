@@ -33,8 +33,19 @@ async def startup_event():
     """Iniciar servicios cuando arranca la aplicación"""
     network_manager.start_network_services()
     
+    # DESCUBRIMIENTO AUTOMÁTICO DE PEERS
+    print("🔍 Descubriendo peers desde servidor RGD...")
+    try:
+        success = blockchain.discover_peers_from_server("http://rudagserver.canariannode.uk")
+        if success:
+            print("✅ Descubrimiento de peers completado")
+        else:
+            print("⚠️  Usando configuración local de peers")
+    except Exception as e:
+        print(f"❌ Error en descubrimiento de peers: {e}")
+    
     # Sincronización automática al inicio
-    print("🔄 Sincronizando al inicio...")
+    print("🔄 Sincronizando blockchain al inicio...")
     try:
         success = network_manager.sync_blockchain()
         if success:
@@ -345,6 +356,23 @@ async def share_peers():
     """Forzar compartir lista de peers con la red"""
     network_manager._share_peers_with_network()
     return {'mensaje': 'Lista de peers compartida con la red'}
+
+@app.post('/network/discover')
+async def discover_peers():
+    """Descubrir nuevos peers manualmente"""
+    try:
+        success = blockchain.discover_peers_from_server("http://rudagserver.canariannode.uk")
+        if success:
+            return {
+                "mensaje": "Descubrimiento de peers completado",
+                "nuevos_peers": len(blockchain.nodes),
+                "servidor": "rudagserver.canariannode.uk"
+            }
+        else:
+            return {"error": "No se pudieron descubrir nuevos peers"}
+    except Exception as e:
+        return {"error": f"Error en descubrimiento: {e}"}
+
 
 if __name__ == "__main__":
     print(f"=== {RGDBlockchainConfig.NAME} ===")

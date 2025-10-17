@@ -97,3 +97,9 @@ Rudag Core es una base sobre la cual se pueden construir funcionalidades más av
 ## 7. Conclusión
 
 Rudag Core logra su objetivo de ser una implementación funcional y educativa de una blockchain. A través de su código modular y su CLI interactiva, ofrece una plataforma accesible para aprender y experimentar con los componentes clave de la tecnología de registro distribuido. El proyecto sienta las bases para futuras exploraciones y desarrollos en el campo de las criptomonedas.
+
+---
+
+**Apéndice: Dirección Génesis Fija**
+
+Es importante destacar que Rudag Core utiliza una dirección génesis fija (`RGD:1A77LFiAzzVnDdpMRjKqwB3ZjiVnuNqQjk`) para la creación del bloque génesis y para la función de reinicio de la blockchain. Esto asegura una consistencia y un punto de partida inmutable para la cadena. Cualquier intento de especificar una dirección génesis diferente al reiniciar la blockchain será ignorado, utilizando siempre la dirección predefinida en `config.json`.
