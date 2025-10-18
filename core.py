@@ -188,50 +188,57 @@ class Blockchain:
     def last_block(self):
         return self.chain[-1] if self.chain else None
 
-        return True
-
     def add_node(self, address):
-        """
-        Add a new node to the list of nodes
-        """
         parsed_url = urlparse(address)
-        if parsed_url.netloc:
-            self.nodes.add(parsed_url.netloc)
-        elif parsed_url.path:
-            # Accepts an URL without scheme like '192.168.0.5:5000'
-            self.nodes.add(parsed_url.path)
-        else:
-            raise ValueError('Invalid URL')
-
-    def share_peers_list(self, target_node):
-        """Compartir lista completa de peers con un nodo específico"""
-        try:
-            # Intentar tanto HTTP como HTTPS
-            protocols = ['https', 'http']
-            success = False
+        # Extraer solo el hostname para almacenamiento consistente
+        node_address = parsed_url.netloc or parsed_url.path
+        
+        if node_address not in self.nodes:
+            self.nodes.add(node_address)
+            self.save_blockchain()
+            print(f"✅ Nodo añadido: {node_address}")
             
-            for protocol in protocols:
+            # Compartir automáticamente con otros nodos si está habilitado
+            if RGDBlockchainConfig.AUTOMATIC_PEER_DISCOVERY:
+                self._share_new_node_with_peers(node_address)
+        else:
+            print(f"⏭️  Nodo ya existe: {node_address}")
+
+    def _share_new_node_with_peers(self, new_node):
+        """Compartir nuevo nodo con otros peers de la red"""
+        print(f"🔄 Compartiendo nuevo nodo {new_node} con la red...")
+        for node in list(self.nodes):
+            if node != new_node:  # No enviar a sí mismo
                 try:
-                    response = requests.post(
-                        f"{protocol}://{target_node}/network/receive",
+                    # Enviar mensaje de nuevo peer a nodos existentes
+                    requests.post(
+                        f"http://{node}/network/receive",
                         json={
-                            'type': 'peers_list',
-                            'data': {'peers': list(self.nodes)},
+                            'type': 'new_peer',
+                            'data': {'node': new_node},
                             'timestamp': time.time(),
                             'node_id': self.node_id
                         },
                         timeout=5
                     )
-                    if response.status_code == 200:
-                        print(f"✅ Lista de peers compartida con {target_node} ({protocol})")
-                        success = True
-                        break
+                    print(f"✅ Nodo {new_node} compartido con {node}")
                 except Exception as e:
-                    continue
-            
-            if not success:
-                print(f"❌ Error compartiendo peers con {target_node}")
-                
+                    print(f"❌ Error compartiendo nodo con {node}: {e}")
+
+    def share_peers_list(self, target_node):
+        """Compartir lista completa de peers con un nodo específico"""
+        try:
+            requests.post(
+                f"http://{target_node}/network/receive",
+                json={
+                    'type': 'peers_list',
+                    'data': {'peers': list(self.nodes)},
+                    'timestamp': time.time(),
+                    'node_id': self.node_id
+                },
+                timeout=5
+            )
+            print(f"✅ Lista de peers compartida con {target_node}")
         except Exception as e:
             print(f"❌ Error compartiendo peers con {target_node}: {e}")
 
@@ -389,63 +396,62 @@ class Blockchain:
             for tx in block.get('transacciones', []):
                 if tx.get('tipo') == 'coinbase':
                     total += tx.get('recompensa', 0)
-    def discover_peers_simplified(self, server_url="https://rudagserver.canariannode.uk"):
-        """Descubrimiento SIMPLIFICADO de peers - con mejor manejo de errores"""
+        return total
+
+    def discover_peers_from_server(self, server_url="https://rudagserver.canariannode.uk"):
+        """Descubrir peers desde el servidor central via Cloudflare"""
         try:
-            print(f"🔍 Conectando al servidor: {server_url}")
+            print(f"🔍 Conectando al servidor de nodos: {server_url}")
             
-            # Usar directamente los peers conocidos por este nodo
-            local_peers = list(self.nodes)
-            print(f"📡 Obtenidos {len(local_peers)} peers locales del propio nodo.")
-            
-            # 2. Registrar nodo en servidor
+            # Registrar este nodo en el servidor
             node_address = self.get_node_address()
             registration_data = {
                 "node_address": node_address,
                 "node_id": self.node_id,
-                "local_peers": local_peers,
                 "timestamp": time.time()
             }
             
-            # 3. Enviar registro al servidor
-            response = requests.post(
-                f"{server_url}/register_with_peers",
-                json=registration_data,
-                timeout=15
-            )
+            # Registrar nodo
+            try:
+                response = requests.post(
+                    f"{server_url}/register",
+                    json=registration_data,
+                    timeout=15
+                )
+                if response.status_code == 200:
+                    reg_data = response.json()
+                    print(f"✅ Nodo registrado en servidor. Total: {reg_data['total_nodes']} nodos")
+            except Exception as e:
+                print(f"⚠️  No se pudo registrar nodo: {e}")
+            
+            # Obtener lista de nodos actualizada
+            print("📡 Obteniendo lista de nodos activos...")
+            response = requests.get(f"{server_url}/nodes", timeout=15)
             
             if response.status_code == 200:
-                result = response.json()
-                print(f"✅ Nodo registrado. Peers locales: {len(local_peers)}")
+                nodes_data = response.json()
+                discovered_nodes = nodes_data["nodes"]
                 
-                # 4. Obtener lista completa del servidor
-                server_peers = result.get("all_peers", [])
-                added_count = self.add_peers_from_list(server_peers)
+                print(f"📋 Servidor reporta {len(discovered_nodes)} nodos conocidos")
                 
-                print(f"📋 Servidor reporta {len(server_peers)} nodos | Nuevos: {added_count}")
+                added_count = 0
+                for node in discovered_nodes:
+                    if node not in self.nodes and node != node_address:  # No añadirse a sí mismo
+                        self.add_node(node)
+                        added_count += 1
+                
+                print(f"✅ {added_count} nuevos peers añadidos a la red local")
+                self.save_blockchain()
                 return True
-            else:
-                print(f"❌ Error del servidor: {response.status_code}")
                 
+        except requests.exceptions.ConnectionError:
+            print("❌ No se puede conectar al servidor de nodos")
+        except requests.exceptions.Timeout:
+            print("❌ Timeout conectando al servidor de nodos")
         except Exception as e:
-            print(f"❌ Error en descubrimiento simplificado: {e}")
+            print(f"❌ Error descubriendo peers: {e}")
         
         return False
-
-    def add_peers_from_list(self, peers_list):
-        """Añadir múltiples peers desde una lista"""
-        added_count = 0
-        current_node = self.get_node_address()
-        
-        for peer in peers_list:
-            if peer and peer != current_node and peer not in self.nodes:
-                # Usar add_node para mantener consistencia
-                self.add_node(peer)
-                added_count += 1
-        
-        return added_count
-
-
 
     def get_node_address(self):
         """Obtener la dirección pública de este nodo"""
