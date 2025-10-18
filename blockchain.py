@@ -5,6 +5,7 @@ from time import time
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 import uvicorn
+import asyncio
 
 class Transaccion(BaseModel):
     envia: str
@@ -31,12 +32,17 @@ mining_wallet = None
 @app.on_event("startup")
 async def startup_event():
     """Iniciar servicios cuando arranca la aplicación"""
+    # Primero iniciar servicios de red
     network_manager.start_network_services()
     
-    # DESCUBRIMIENTO AUTOMÁTICO DE PEERS
-    print("🔍 Descubriendo peers desde servidor RGD...")
+    # Esperar un poco para que el servidor esté listo
+    print("⏳ Esperando que el servidor esté listo...")
+    await asyncio.sleep(3)
+    
+    # DESCUBRIMIENTO SIMPLIFICADO DE PEERS
+    print("🔍 Descubriendo peers (método simplificado)...")
     try:
-        success = blockchain.discover_peers_from_server("http://rudagserver.canariannode.uk")
+        success = blockchain.discover_peers_simplified("https://rudagserver.canariannode.uk")
         if success:
             print("✅ Descubrimiento de peers completado")
         else:
@@ -44,7 +50,8 @@ async def startup_event():
     except Exception as e:
         print(f"❌ Error en descubrimiento de peers: {e}")
     
-    # Sincronización automática al inicio
+    # Sincronización automática al inicio (esperar un poco más)
+    await asyncio.sleep(2)
     print("🔄 Sincronizando blockchain al inicio...")
     try:
         success = network_manager.sync_blockchain()
@@ -356,22 +363,6 @@ async def share_peers():
     """Forzar compartir lista de peers con la red"""
     network_manager._share_peers_with_network()
     return {'mensaje': 'Lista de peers compartida con la red'}
-
-@app.post('/network/discover')
-async def discover_peers():
-    """Descubrir nuevos peers manualmente"""
-    try:
-        success = blockchain.discover_peers_from_server("http://rudagserver.canariannode.uk")
-        if success:
-            return {
-                "mensaje": "Descubrimiento de peers completado",
-                "nuevos_peers": len(blockchain.nodes),
-                "servidor": "rudagserver.canariannode.uk"
-            }
-        else:
-            return {"error": "No se pudieron descubrir nuevos peers"}
-    except Exception as e:
-        return {"error": f"Error en descubrimiento: {e}"}
 
 
 if __name__ == "__main__":

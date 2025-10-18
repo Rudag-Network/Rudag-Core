@@ -22,7 +22,7 @@ class RudagCore:
         
         self.base_url = "http://localhost:5000"
         self.mining_active = False
-        self.mining_interval = 60  # 60 segundos entre bloques
+        self.mining_interval = 9  # 9 segundos entre bloques
 
     def clear_screen(self):
         os.system('clear' if os.name == 'posix' else 'cls')
@@ -352,8 +352,11 @@ class RudagCore:
                 print(f"{self.CYAN}Respuesta: {result}{self.NC}")
                 print()
                 
-                # Espera silenciosa de 60 segundos sin mostrar nada
-                time.sleep(self.mining_interval)
+                # Espera silenciosa de 9 segundos sin mostrar nada
+                for i in range(9):
+                    if not self.mining_active:
+                        break
+                    time.sleep(1)
             
             # Verificar si el nodo sigue respondiendo cada 10 bloques
             if block_count % 10 == 0 and self.mining_active:

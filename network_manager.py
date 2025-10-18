@@ -63,7 +63,7 @@ class NetworkManager:
                 if current_time - last_peer_discovery > peer_discovery_interval:
                     print("🔄 Descubrimiento periódico de peers...")
                     try:
-                        self.blockchain.discover_peers_from_server("http://rudagserver.canariannode.uk")
+                        self.blockchain.discover_peers_simplified("https://rudagserver.canariannode.uk")
                     except Exception as e:
                         print(f"❌ Error en descubrimiento periódico: {e}")
                     last_peer_discovery = current_time
